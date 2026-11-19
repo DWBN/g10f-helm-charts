@@ -13,10 +13,14 @@ spec:
       {{- include "wiki.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
+      # The checksums of the nginx config and the secrets change the pod template when their content changes, so
+      # that the pods are restarted: nginx reads its config and the wiki its environment only at start.
       annotations:
+        checksum/nginx-config: {{ include (print $.Template.BasePath "/nginx-configmap.yaml") . | sha256sum }}
+        checksum/secrets: {{ include (print $.Template.BasePath "/secrets.yaml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- end }}
       labels:
         {{- include "wiki.selectorLabels" . | nindent 8 }}
     spec:
